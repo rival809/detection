@@ -1,23 +1,24 @@
-import uuid
+import asyncio
 import json
-import tempfile
 import os
+import tempfile
+import uuid
+from datetime import datetime
+
 import cv2
 import redis
-from datetime import datetime
 from loguru import logger
+
 from app.core.celery_app import celery_app
 from app.core.config import settings
+from app.db.models import Detection, TaxStatus, Video, VideoStatus
 from app.db.session import SessionLocal
-from app.db.models import Video, Detection, VideoStatus, TaxStatus
+from app.services.deduplicator import deduplicate
+from app.services.ocr_engine import read_plate
 from app.services.storage import storage_service
+from app.services.tax_api import TaxAPIService
 from app.services.video_processor import frame_sampler
 from app.services.yolo_detector import detect_plates
-from app.services.ocr_engine import read_plate
-from app.services.deduplicator import deduplicate
-from app.services.tax_api import TaxAPIService
-import asyncio
-import numpy as np
 
 
 def publish_progress(r: redis.Redis, video_id: str, stage: str, percent: int, message: str = ""):

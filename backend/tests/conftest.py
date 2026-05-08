@@ -1,4 +1,6 @@
 import pytest
+from alembic import command
+from alembic.config import Config
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -15,6 +17,10 @@ TestingSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 @pytest.fixture(scope="session", autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)
+    # Stamp alembic_version so lifespan's `upgrade head` sees nothing to migrate
+    alembic_cfg = Config("alembic.ini")
+    alembic_cfg.set_main_option("sqlalchemy.url", TEST_DB_URL)
+    command.stamp(alembic_cfg, "head")
     yield
     Base.metadata.drop_all(bind=engine)
 
