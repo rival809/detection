@@ -22,7 +22,9 @@
       "PowerShell(gcloud compute instances list *)",
       "PowerShell(gcloud compute firewall-rules list *)",
       "PowerShell(gcloud compute *)",
-      "PowerShell(gcloud compute ssh detection-server --zone=asia-southeast2-b --quiet --command=\"curl -fsSL https://get.docker.com | sudo sh && sudo usermod -aG docker $USER\")"
+      "PowerShell(gcloud compute ssh detection-server --zone=asia-southeast2-b --quiet --command=\"curl -fsSL https://get.docker.com | sudo sh && sudo usermod -aG docker $USER\")",
+      "Bash(Get-ChildItem -Path . -Directory)",
+      "Bash(Select-Object Name)"
     ]
   }
 }

@@ -77,7 +77,7 @@ def process_video(self, video_id: str):
         tax_service = TaxAPIService()
         for i, det in enumerate(unique_detections):
             publish_progress(r, video_id, "tax_check", 70 + int((i / max(len(unique_detections), 1)) * 25), f"Cek pajak: {det['plate_number']}")
-            tax_result = asyncio.run(tax_service.check_tax(det["plate_number"]))
+            tax_result = asyncio.run(tax_service.check_tax(det["plate_number"], db=db))
             logger.info(f"[video:{video_id}] Plate {det['plate_number']} → tax:{tax_result['status']}")
 
             detection = Detection(

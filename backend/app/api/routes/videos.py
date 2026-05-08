@@ -83,3 +83,18 @@ def get_video(
     if not video:
         raise HTTPException(status_code=404, detail="Video not found")
     return video
+
+
+@router.delete("/{video_id}", status_code=204)
+def delete_video(
+    video_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    from app.db.models import Detection
+    video = db.query(Video).filter(Video.id == video_id, Video.user_id == current_user.id).first()
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+    db.query(Detection).filter(Detection.video_id == video_id).delete()
+    db.delete(video)
+    db.commit()

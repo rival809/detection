@@ -40,9 +40,26 @@ async def recheck_tax(
     if not detection:
         raise HTTPException(status_code=404, detail="Detection not found")
 
-    result = await tax_api_service.check_tax(detection.plate_number)
+    result = await tax_api_service.check_tax(detection.plate_number, db=db)
     detection.tax_info_json = result.get("data")
     detection.tax_status = TaxStatus(result.get("status", "ERROR"))
     db.commit()
     db.refresh(detection)
     return detection
+
+
+@router.delete("/{detection_id}", status_code=204)
+def delete_detection(
+    video_id: uuid.UUID,
+    detection_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    video = db.query(Video).filter(Video.id == video_id, Video.user_id == current_user.id).first()
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+    detection = db.query(Detection).filter(Detection.id == detection_id, Detection.video_id == video_id).first()
+    if not detection:
+        raise HTTPException(status_code=404, detail="Detection not found")
+    db.delete(detection)
+    db.commit()

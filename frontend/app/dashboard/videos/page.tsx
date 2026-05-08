@@ -1,20 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
-const STATUS_COLOR: Record<string, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  PROCESSING: "bg-blue-100 text-blue-800",
-  COMPLETED: "bg-green-100 text-green-800",
-  FAILED: "bg-red-100 text-red-800",
+const STATUS_STYLE: Record<string, { dot: string; text: string; label: string }> = {
+  PENDING:    { dot: "bg-yellow-400", text: "text-yellow-400", label: "Pending" },
+  PROCESSING: { dot: "bg-blue-400 animate-pulse", text: "text-blue-400", label: "Memproses" },
+  COMPLETED:  { dot: "bg-green-400", text: "text-green-400", label: "Selesai" },
+  FAILED:     { dot: "bg-red-400", text: "text-red-400", label: "Gagal" },
 };
 
 export default function VideosPage() {
   const [videos, setVideos] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
     api.get(`/videos?page=${page}&size=20`).then(({ data }) => {
@@ -23,46 +23,144 @@ export default function VideosPage() {
     });
   }, [page]);
 
+  async function handleDelete(id: string) {
+    setDeleting(id);
+    try {
+      await api.delete(`/videos/${id}`);
+      setVideos((prev) => prev.filter((v) => v.id !== id));
+      setTotal((t) => t - 1);
+    } finally {
+      setDeleting(null);
+      setConfirmId(null);
+    }
+  }
+
+  const totalPages = Math.ceil(total / 20) || 1;
+
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Daftar Video</h1>
-        <a href="/dashboard/upload">
-          <Button>Upload Video</Button>
+    <div className="p-6 space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Daftar Video</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{total} video tersimpan</p>
+        </div>
+        <a
+          href="/dashboard/upload"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>
+          </svg>
+          Upload Video
         </a>
       </div>
-      <div className="overflow-x-auto rounded border">
+
+      {/* Table */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="p-3 text-left">Nama File</th>
-              <th className="p-3 text-left">Status</th>
-              <th className="p-3 text-left">Jumlah Plat</th>
-              <th className="p-3 text-left">Upload</th>
-              <th className="p-3 text-left">Aksi</th>
+          <thead>
+            <tr className="border-b border-border">
+              <th className="px-5 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nama File</th>
+              <th className="px-5 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+              <th className="px-5 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Plat</th>
+              <th className="px-5 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Upload</th>
+              <th className="px-5 py-3.5 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Aksi</th>
             </tr>
           </thead>
           <tbody>
-            {videos.map((v) => (
-              <tr key={v.id} className="border-t hover:bg-gray-50">
-                <td className="p-3">{v.original_filename}</td>
-                <td className="p-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLOR[v.status]}`}>{v.status}</span>
-                </td>
-                <td className="p-3">{v.total_plates}</td>
-                <td className="p-3">{new Date(v.uploaded_at).toLocaleString("id-ID")}</td>
-                <td className="p-3">
-                  <a href={`/dashboard/videos/${v.id}`} className="text-blue-600 hover:underline">Detail</a>
+            {videos.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-5 py-16 text-center text-muted-foreground">
+                  <div className="flex flex-col items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-30">
+                      <path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/>
+                    </svg>
+                    <p>Belum ada video</p>
+                  </div>
                 </td>
               </tr>
-            ))}
+            )}
+            {videos.map((v) => {
+              const s = STATUS_STYLE[v.status] ?? STATUS_STYLE.PENDING;
+              return (
+                <tr key={v.id} className="border-b border-border last:border-0 hover:bg-accent/40 transition-colors">
+                  <td className="px-5 py-4">
+                    <span className="font-medium text-foreground truncate max-w-xs block">{v.original_filename}</span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot}`} />
+                      <span className={`text-xs font-semibold ${s.text}`}>{s.label}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-foreground font-semibold">{v.total_plates ?? "—"}</td>
+                  <td className="px-5 py-4 text-muted-foreground text-xs">{new Date(v.uploaded_at).toLocaleString("id-ID")}</td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-2 justify-end">
+                      <a
+                        href={`/dashboard/videos/${v.id}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                      >
+                        Detail
+                      </a>
+                      {confirmId === v.id ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleDelete(v.id)}
+                            disabled={deleting === v.id}
+                            className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-destructive text-white hover:bg-destructive/80 transition-colors disabled:opacity-50"
+                          >
+                            {deleting === v.id ? "..." : "Hapus"}
+                          </button>
+                          <button
+                            onClick={() => setConfirmId(null)}
+                            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:bg-accent transition-colors"
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmId(v.id)}
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          title="Hapus video"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
-      <div className="flex gap-2 items-center text-sm text-gray-600">
-        <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="px-2 py-1 border rounded disabled:opacity-40">Prev</button>
-        <span>Halaman {page} / {Math.ceil(total / 20) || 1}</span>
-        <button onClick={() => setPage((p) => p + 1)} disabled={page * 20 >= total} className="px-2 py-1 border rounded disabled:opacity-40">Next</button>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-muted-foreground">
+          Halaman {page} dari {totalPages} &middot; {total} total video
+        </p>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            ← Prev
+          </button>
+          <button
+            onClick={() => setPage((p) => p + 1)}
+            disabled={page >= totalPages}
+            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            Next →
+          </button>
+        </div>
       </div>
     </div>
   );
