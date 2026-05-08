@@ -2,6 +2,9 @@
 select = ["E", "W", "F", "I"]
 ignore = ["E501"]  # line too long — handled by formatter
 
+[lint.isort]
+known-first-party = ["app"]
+
 [lint.per-file-ignores]
 "tests/*" = ["F811"]  # redefined unused (pytest fixtures)
 "alembic/*" = ["F401"]
