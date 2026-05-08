@@ -13,10 +13,8 @@ def get_model() -> YOLO:
         if MODEL_PATH.exists():
             _model = YOLO(str(MODEL_PATH))
         else:
-            # Auto-download jika belum ada (fallback saat development)
-            from scripts.download_model import download
-            download()
-            _model = YOLO(str(MODEL_PATH))
+            # Auto-download yolov8n.pt as last resort
+            _model = YOLO("yolov8n.pt")
     return _model
 
 
@@ -29,7 +27,6 @@ def detect_plates(frame: np.ndarray, conf_threshold: float = 0.45) -> list[dict]
         conf = float(box.conf[0])
         x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
 
-        # Abaikan crop yang terlalu kecil (bukan plat valid)
         w, h = x2 - x1, y2 - y1
         if w < 30 or h < 10:
             continue
