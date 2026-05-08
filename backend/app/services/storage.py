@@ -9,6 +9,7 @@ from app.core.config import settings
 class StorageService:
     def __init__(self):
         self._client: Minio | None = None
+        self._public_client: Minio | None = None
 
     @property
     def client(self) -> Minio:
@@ -21,6 +22,19 @@ class StorageService:
             )
             self._ensure_bucket()
         return self._client
+
+    @property
+    def public_client(self) -> Minio:
+        """Client pakai public URL — khusus untuk generate presigned URL yang bisa dibuka browser."""
+        if self._public_client is None:
+            endpoint = settings.MINIO_PUBLIC_URL.replace("http://", "").replace("https://", "") if settings.MINIO_PUBLIC_URL else settings.MINIO_ENDPOINT
+            self._public_client = Minio(
+                endpoint,
+                access_key=settings.MINIO_ACCESS_KEY,
+                secret_key=settings.MINIO_SECRET_KEY,
+                secure=settings.MINIO_PUBLIC_URL.startswith("https") if settings.MINIO_PUBLIC_URL else False,
+            )
+        return self._public_client
 
     def _ensure_bucket(self):
         if not self._client.bucket_exists(settings.MINIO_BUCKET):
@@ -42,7 +56,7 @@ class StorageService:
         self.client.fget_object(settings.MINIO_BUCKET, object_name, dest_path)
 
     def get_presigned_url(self, object_name: str, expires_hours: int = 1) -> str:
-        return self.client.presigned_get_object(
+        return self.public_client.presigned_get_object(
             settings.MINIO_BUCKET,
             object_name,
             expires=timedelta(hours=expires_hours),
