@@ -50,7 +50,8 @@ def detect_and_read(frame: np.ndarray) -> list[dict]:
 
         # Combined confidence: geometric mean of detection + OCR score
         det_conf = float(plate.detection.confidence)
-        ocr_conf = float(ocr.confidence)
+        raw_ocr_conf = ocr.confidence
+        ocr_conf = float(sum(raw_ocr_conf) / len(raw_ocr_conf)) if isinstance(raw_ocr_conf, list) else float(raw_ocr_conf)
         confidence = (det_conf * ocr_conf) ** 0.5
 
         detections.append({
