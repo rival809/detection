@@ -18,7 +18,11 @@
       "Bash(pip show *)",
       "Bash(pip install *)",
       "Bash(gh api *)",
-      "WebFetch(domain:ankandrew.github.io)"
+      "WebFetch(domain:ankandrew.github.io)",
+      "PowerShell(gcloud compute instances list *)",
+      "PowerShell(gcloud compute firewall-rules list *)",
+      "PowerShell(gcloud compute *)",
+      "PowerShell(gcloud compute ssh detection-server --zone=asia-southeast2-b --quiet --command=\"curl -fsSL https://get.docker.com | sudo sh && sudo usermod -aG docker $USER\")"
     ]
   }
 }
