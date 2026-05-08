@@ -1,9 +1,8 @@
+src = ["."]
+
 [lint]
 select = ["E", "W", "F", "I"]
-ignore = ["E501"]
-
-[lint.isort]
-known-first-party = ["app"]
+ignore = ["E501", "I001"]
 
 [lint.per-file-ignores]
 "tests/*" = ["F811"]
