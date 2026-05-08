@@ -53,8 +53,6 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-    volumes:
-      - ./backend/models:/app/models
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
 
   worker:
@@ -72,8 +70,6 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-    volumes:
-      - ./backend/models:/app/models
     command: celery -A app.core.celery_app worker --loglevel=info --concurrency=2
 
   frontend:

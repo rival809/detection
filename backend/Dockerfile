@@ -14,6 +14,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Download model saat build agar tidak download ulang setiap container start
+RUN python scripts/download_model.py
+
 RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
 USER appuser
 
