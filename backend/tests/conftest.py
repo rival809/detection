@@ -50,8 +50,13 @@ def client(db):
 
 
 @pytest.fixture()
-def auth_headers(client):
-    client.post("/api/v1/auth/register", json={"email": "test@example.com", "password": "testpass123"})
-    resp = client.post("/api/v1/auth/login", json={"email": "test@example.com", "password": "testpass123"})
+def auth_headers(client, db):
+    from app.core.security import hash_password
+    from app.db.models import User
+
+    user = User(email="authtest@example.com", hashed_password=hash_password("testpass123"))
+    db.add(user)
+    db.commit()
+    resp = client.post("/api/v1/auth/login", json={"email": "authtest@example.com", "password": "testpass123"})
     token = resp.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
