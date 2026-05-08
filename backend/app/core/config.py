@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     FRAME_SAMPLE_INTERVAL_SEC: float = 0.5
     BLUR_THRESHOLD: float = 100.0
 
+    # Rate limits
+    UPLOAD_RATE_LIMIT: str = "10/hour"
+    LOGIN_RATE_LIMIT: str = "20/minute"
+
+    LOG_LEVEL: str = "INFO"
+
     class Config:
         env_file = ".env"
         case_sensitive = True

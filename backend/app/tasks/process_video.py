@@ -5,6 +5,7 @@ import os
 import cv2
 import redis
 from datetime import datetime
+from loguru import logger
 from app.core.celery_app import celery_app
 from app.core.config import settings
 from app.db.session import SessionLocal
@@ -28,10 +29,14 @@ def publish_progress(r: redis.Redis, video_id: str, stage: str, percent: int, me
 def process_video(self, video_id: str):
     db = SessionLocal()
     r = redis.from_url(settings.REDIS_URL)
+    tmp_path = None
+
+    logger.info(f"[video:{video_id}] Task started")
 
     try:
         video = db.query(Video).filter(Video.id == uuid.UUID(video_id)).first()
         if not video:
+            logger.warning(f"[video:{video_id}] Not found in DB, skipping")
             return
 
         video.status = VideoStatus.PROCESSING
@@ -42,6 +47,7 @@ def process_video(self, video_id: str):
         with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp:
             tmp_path = tmp.name
         storage_service.download_file(video.storage_path, tmp_path)
+        logger.info(f"[video:{video_id}] Downloaded to {tmp_path}")
         publish_progress(r, video_id, "downloaded", 15, "Video berhasil diunduh")
 
         # Process frames
@@ -59,7 +65,6 @@ def process_video(self, video_id: str):
                 if not ocr_result["text"] or len(ocr_result["text"]) < 4:
                     continue
 
-                # Save crop image
                 crop_filename = f"crops/{video_id}/{frame_idx}_{uuid.uuid4().hex[:8]}.jpg"
                 _, buf = cv2.imencode(".jpg", crop)
                 asyncio.run(storage_service.upload_bytes(buf.tobytes(), crop_filename, "image/jpeg"))
@@ -71,14 +76,17 @@ def process_video(self, video_id: str):
                     "image_crop_url": crop_url,
                 })
 
+        logger.info(f"[video:{video_id}] Raw detections: {len(raw_detections)}")
         publish_progress(r, video_id, "deduplicating", 70, "Deduplication plat nomor")
         unique_detections = deduplicate(raw_detections)
+        logger.info(f"[video:{video_id}] Unique plates: {len(unique_detections)}")
 
         # Tax API
         tax_service = TaxAPIService()
         for i, det in enumerate(unique_detections):
             publish_progress(r, video_id, "tax_check", 70 + int((i / max(len(unique_detections), 1)) * 25), f"Cek pajak: {det['plate_number']}")
             tax_result = asyncio.run(tax_service.check_tax(det["plate_number"]))
+            logger.info(f"[video:{video_id}] Plate {det['plate_number']} → tax:{tax_result['status']}")
 
             detection = Detection(
                 video_id=uuid.UUID(video_id),
@@ -95,9 +103,11 @@ def process_video(self, video_id: str):
         video.processed_at = datetime.utcnow()
         db.commit()
 
+        logger.info(f"[video:{video_id}] Completed — {len(unique_detections)} plates found")
         publish_progress(r, video_id, "completed", 100, f"Selesai! {len(unique_detections)} plat ditemukan")
 
     except Exception as exc:
+        logger.exception(f"[video:{video_id}] Processing failed: {exc}")
         db.rollback()
         video = db.query(Video).filter(Video.id == uuid.UUID(video_id)).first()
         if video:
@@ -109,5 +119,6 @@ def process_video(self, video_id: str):
     finally:
         db.close()
         r.close()
-        if os.path.exists(tmp_path):
+        if tmp_path and os.path.exists(tmp_path):
             os.remove(tmp_path)
+            logger.debug(f"[video:{video_id}] Temp file cleaned up")

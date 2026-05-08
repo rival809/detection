@@ -1,13 +1,16 @@
 import uuid
 import magic
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Query
 from sqlalchemy.orm import Session
+from loguru import logger
+
 from app.db.session import get_db
 from app.db.models import User, Video, VideoStatus
 from app.db.schemas import VideoOut, VideoListOut
 from app.api.deps import get_current_user
 from app.services.storage import storage_service
 from app.core.config import settings
+from app.core.limiter import limiter
 from app.tasks.process_video import process_video
 
 router = APIRouter(prefix="/videos", tags=["videos"])
@@ -16,7 +19,9 @@ ALLOWED_MIME_TYPES = {"video/mp4", "video/x-msvideo", "video/quicktime"}
 
 
 @router.post("/upload", response_model=VideoOut, status_code=201)
+@limiter.limit(settings.UPLOAD_RATE_LIMIT)
 async def upload_video(
+    request: Request,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -46,6 +51,7 @@ async def upload_video(
     db.refresh(video)
 
     process_video.delay(str(video_id))
+    logger.info(f"Video {video_id} queued for processing by user {current_user.email}")
 
     return video
 

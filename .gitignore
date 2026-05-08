@@ -17,6 +17,10 @@ out/
 # Models (large binary)
 backend/models/*.pt
 
+# Logs
+logs/
+*.log
+*.log.gz
+
 # Temp files
 *.tmp
-*.log
