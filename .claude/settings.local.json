@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(Copy-Item *)"
+      "PowerShell(Copy-Item *)",
+      "PowerShell(gh auth *)",
+      "PowerShell(New-Item *)",
+      "PowerShell(cd \"D:\\\\Kerja\\\\detection\\\\backend\"; $env:DATABASE_URL=\"postgresql://user:pass@localhost/db\"; $env:REDIS_URL=\"redis://localhost:6379/0\"; $env:MINIO_ENDPOINT=\"localhost:9000\"; $env:MINIO_ACCESS_KEY=\"minioadmin\"; $env:MINIO_SECRET_KEY=\"minioadmin\"; $env:SECRET_KEY=\"dummy-secret-key-for-migration-generation\"; .\\\\venv\\\\Scripts\\\\alembic revision --autogenerate -m \"initial schema\" 2>&1)",
+      "Read(//mnt/d/Kerja/**)",
+      "Bash(gh run *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(python -m ruff check app/ tests/ --select E,W,F,I --ignore E501 --fix)"
     ]
   }
 }
