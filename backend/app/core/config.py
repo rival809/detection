@@ -19,7 +19,6 @@ class Settings(BaseSettings):
 
     TAX_API_BASE_URL: str = ""
     TAX_API_KEY: str = ""
-    ADMIN_SECRET: str = ""
 
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
 

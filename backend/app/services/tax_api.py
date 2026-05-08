@@ -5,23 +5,9 @@ from datetime import datetime
 import httpx
 
 TAX_API_URL = "https://apisakti.bapenda.jabarprov.go.id/api/utilities/info-pajak"
-# Fallback token used when DB has no configured token yet
-_FALLBACK_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTkyLjE2OC45OS40Nzo4MDAwL2FwaS9sb2dpbiIsImlhdCI6MTc3ODIzNjg4MSwiZXhwIjoxNzc4MjU4NDgxLCJuYmYiOjE3NzgyMzY4ODEsImp0aSI6ImVjZ0tkNXZyYTBoWkk0S20iLCJzdWIiOiIxMSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.JBV8mTUbEO0oFT5DRyx0owL5iGSy_Ac34eSNvhKU940"
+TAX_API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTkyLjE2OC45OS40Nzo4MDAwL2FwaS9sb2dpbiIsImlhdCI6MTc3ODIzNjg4MSwiZXhwIjoxNzc4MjU4NDgxLCJuYmYiOjE3NzgyMzY4ODEsImp0aSI6ImVjZ0tkNXZyYTBoWkk0S20iLCJzdWIiOiIxMSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.JBV8mTUbEO0oFT5DRyx0owL5iGSy_Ac34eSNvhKU940"
 
 _PLATE_RE = re.compile(r"^([A-Z]{1,2})(\d{1,4})([A-Z]{1,3})?$")
-
-
-def get_tax_token(db=None) -> str:
-    """Read token from DB system_config, fall back to hardcoded token."""
-    if db is not None:
-        try:
-            from app.db.models import SystemConfig
-            row = db.query(SystemConfig).filter(SystemConfig.key == "TAX_API_TOKEN").first()
-            if row and row.value:
-                return row.value
-        except Exception:
-            pass
-    return _FALLBACK_TOKEN
 
 
 def parse_plate(plate_number: str) -> dict | None:
@@ -58,8 +44,7 @@ def map_status(data: dict) -> str:
     if tgl:
         try:
             exp = datetime.strptime(str(tgl)[:10], "%Y-%m-%d")
-            now = datetime.now()
-            return "ACTIVE" if exp >= now else "EXPIRED"
+            return "ACTIVE" if exp >= datetime.now() else "EXPIRED"
         except ValueError:
             pass
 
@@ -77,14 +62,13 @@ def map_status(data: dict) -> str:
 
 
 class TaxAPIService:
-    async def check_tax(self, plate_number: str, db=None) -> dict:
+    async def check_tax(self, plate_number: str) -> dict:
         parsed = parse_plate(plate_number)
         if not parsed:
             return {"status": "NOT_FOUND", "data": {"error": f"Format plat tidak dikenali: {plate_number}"}}
 
-        token = get_tax_token(db)
         headers = {
-            "Authorization": f"Bearer {token}",
+            "Authorization": f"Bearer {TAX_API_TOKEN}",
             "Content-Type": "application/json",
             "Accept": "*/*",
             "Origin": "https://dev-sakti-mobile.vercel.app",
@@ -111,8 +95,7 @@ class TaxAPIService:
 
                     response.raise_for_status()
                     data = response.json()
-                    status = map_status(data)
-                    return {"status": status, "data": data}
+                    return {"status": map_status(data), "data": data}
 
             except httpx.HTTPStatusError as e:
                 if attempt == 2:

@@ -52,14 +52,6 @@ class Video(Base):
     detections = relationship("Detection", back_populates="video")
 
 
-class SystemConfig(Base):
-    __tablename__ = "system_config"
-
-    key = Column(String, primary_key=True)
-    value = Column(Text, nullable=True)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-
 class Detection(Base):
     __tablename__ = "detections"
 

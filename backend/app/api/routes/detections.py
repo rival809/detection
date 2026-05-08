@@ -40,7 +40,7 @@ async def recheck_tax(
     if not detection:
         raise HTTPException(status_code=404, detail="Detection not found")
 
-    result = await tax_api_service.check_tax(detection.plate_number, db=db)
+    result = await tax_api_service.check_tax(detection.plate_number)
     detection.tax_info_json = result.get("data")
     detection.tax_status = TaxStatus(result.get("status", "ERROR"))
     db.commit()
