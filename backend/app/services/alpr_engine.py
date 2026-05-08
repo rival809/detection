@@ -52,10 +52,17 @@ def detect_and_read(frame: np.ndarray) -> list[dict]:
         if not is_valid_plate(text):
             continue
 
-        # Crop from bounding box
+        # Crop with padding so surrounding vehicle is visible
         bb = plate.detection.bounding_box
-        x1, y1 = int(bb.x1), int(bb.y1)
-        x2, y2 = int(bb.x2), int(bb.y2)
+        h, w = frame.shape[:2]
+        plate_w = int(bb.x2) - int(bb.x1)
+        plate_h = int(bb.y2) - int(bb.y1)
+        pad_x = plate_w * 3
+        pad_y = plate_h * 4
+        x1 = max(0, int(bb.x1) - pad_x)
+        y1 = max(0, int(bb.y1) - pad_y)
+        x2 = min(w, int(bb.x2) + pad_x)
+        y2 = min(h, int(bb.y2) + pad_y)
         crop = frame[y1:y2, x1:x2]
         if crop.size == 0:
             continue
