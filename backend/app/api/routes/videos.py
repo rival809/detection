@@ -1,16 +1,17 @@
 import uuid
-import magic
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Query
-from sqlalchemy.orm import Session
-from loguru import logger
 
-from app.db.session import get_db
-from app.db.models import User, Video, VideoStatus
-from app.db.schemas import VideoOut, VideoListOut
+import magic
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
+from loguru import logger
+from sqlalchemy.orm import Session
+
 from app.api.deps import get_current_user
-from app.services.storage import storage_service
 from app.core.config import settings
 from app.core.limiter import limiter
+from app.db.models import User, Video, VideoStatus
+from app.db.schemas import VideoListOut, VideoOut
+from app.db.session import get_db
+from app.services.storage import storage_service
 from app.tasks.process_video import process_video
 
 router = APIRouter(prefix="/videos", tags=["videos"])

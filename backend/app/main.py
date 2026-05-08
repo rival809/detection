@@ -1,20 +1,24 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import redis as redis_lib
 from alembic import command
 from alembic.config import Config
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
+from minio import Minio
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from sqlalchemy import text
 
+from app.api.routes import auth, detections, stats, videos, ws
 from app.core.config import settings
 from app.core.limiter import limiter
 from app.core.logging import setup_logging
 from app.core.middleware import RequestIDMiddleware
-from app.api.routes import auth, detections, stats, videos, ws
+from app.db.session import SessionLocal
 
 
 def run_migrations():
@@ -70,11 +74,6 @@ app.include_router(ws.router)
 
 @app.get("/health", tags=["system"])
 async def health(request: Request):
-    from sqlalchemy import text
-    from app.db.session import SessionLocal
-    import redis as redis_lib
-    from minio import Minio
-
     checks: dict = {}
 
     # Database

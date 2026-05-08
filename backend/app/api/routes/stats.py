@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from sqlalchemy import func, case
-from app.db.session import get_db
-from app.db.models import User, Video, Detection, VideoStatus, TaxStatus
-from app.api.deps import get_current_user
-from pydantic import BaseModel
-from typing import List
 from datetime import datetime, timedelta
+from typing import List
+
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+from sqlalchemy import case, func
+from sqlalchemy.orm import Session
+
+from app.api.deps import get_current_user
+from app.db.models import Detection, TaxStatus, User, Video, VideoStatus
+from app.db.session import get_db
 
 router = APIRouter(prefix="/stats", tags=["stats"])
 

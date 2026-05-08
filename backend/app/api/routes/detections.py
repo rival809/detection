@@ -1,12 +1,13 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, Query
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.db.session import get_db
-from app.db.models import User, Video, Detection
-from app.db.schemas import DetectionOut, DetectionListOut
+
 from app.api.deps import get_current_user
+from app.db.models import Detection, TaxStatus, User, Video
+from app.db.schemas import DetectionListOut, DetectionOut
+from app.db.session import get_db
 from app.services.tax_api import tax_api_service
-from app.db.models import TaxStatus
 
 router = APIRouter(prefix="/videos/{video_id}/detections", tags=["detections"])
 

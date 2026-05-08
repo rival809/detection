@@ -1,5 +1,6 @@
-import re
 import asyncio
+import re
+
 import httpx
 
 TAX_API_URL = "https://apisakti.bapenda.jabarprov.go.id/api/utilities/info-pajak"
@@ -73,7 +74,6 @@ class TaxAPIService:
         if not parsed:
             return {"status": "NOT_FOUND", "data": {"error": f"Format plat tidak dikenali: {plate_number}"}}
 
-        payload = {**parsed, "bayar_kedepan": "T"}
         headers = {
             "Authorization": f"Bearer {TAX_API_TOKEN}",
             "Content-Type": "application/json",

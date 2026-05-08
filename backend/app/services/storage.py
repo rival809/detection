@@ -1,8 +1,9 @@
 import io
-from minio import Minio
-from minio.error import S3Error
-from app.core.config import settings
 from datetime import timedelta
+
+from minio import Minio
+
+from app.core.config import settings
 
 
 class StorageService:

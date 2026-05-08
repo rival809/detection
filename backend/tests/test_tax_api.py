@@ -1,5 +1,4 @@
-import pytest
-from app.services.tax_api import parse_plate, map_status
+from app.services.tax_api import map_status, parse_plate
 
 
 class TestParsePlate:

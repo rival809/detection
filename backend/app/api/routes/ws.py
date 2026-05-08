@@ -1,7 +1,6 @@
-import json
-import asyncio
 import redis.asyncio as aioredis
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
 from app.core.config import settings
 
 router = APIRouter(tags=["websocket"])

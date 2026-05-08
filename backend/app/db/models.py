@@ -1,10 +1,13 @@
+import enum
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Float, Integer, Boolean, DateTime, ForeignKey, Text, Enum as SAEnum
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
+
 from app.db.session import Base
-import enum
 
 
 class VideoStatus(str, enum.Enum):

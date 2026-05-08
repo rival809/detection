@@ -1,6 +1,7 @@
+from pathlib import Path
+
 import numpy as np
 from ultralytics import YOLO
-from pathlib import Path
 
 MODEL_PATH = Path(__file__).parent.parent.parent / "models" / "yolov8_plate.pt"
 

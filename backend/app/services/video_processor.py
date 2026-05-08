@@ -1,6 +1,8 @@
+from typing import Generator
+
 import cv2
 import numpy as np
-from typing import Generator
+
 from app.core.config import settings
 
 

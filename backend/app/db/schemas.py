@@ -1,8 +1,10 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional, List, Any
 from datetime import datetime
+from typing import Any, List, Optional
 from uuid import UUID
-from app.db.models import VideoStatus, TaxStatus
+
+from pydantic import BaseModel, EmailStr
+
+from app.db.models import TaxStatus, VideoStatus
 
 
 # Auth
