@@ -34,7 +34,7 @@ export default function VideoDetailPage() {
         const p: Progress = JSON.parse(e.data);
         setProgress(p);
         if (p.stage === "completed" || p.stage === "failed") {
-          api.get(`/videos/${id}`).then(({ d }) => setVideo(d));
+          api.get(`/videos/${id}`).then(({ data }) => setVideo(data));
           api.get(`/videos/${id}/detections`).then(({ data }) => setDetections(data.items));
           ws.close();
         }
