@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import api from "@/lib/api";
+import api, { setToken } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,7 @@ export default function LoginPage() {
     setError("");
     try {
       const { data } = await api.post("/auth/login", { email, password });
-      localStorage.setItem("access_token", data.access_token);
+      setToken(data.access_token);
       router.push("/dashboard");
     } catch {
       setError("Email atau password salah");
@@ -33,13 +33,14 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
+          <CardTitle className="text-xl">Plate Detection System</CardTitle>
+          <p className="text-sm text-gray-500">Masuk ke akun Anda</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
             </div>
             <div>
               <Label htmlFor="password">Password</Label>

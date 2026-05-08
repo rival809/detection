@@ -32,13 +32,14 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Daftar Akun</CardTitle>
+          <CardTitle className="text-xl">Daftar Akun</CardTitle>
+          <p className="text-sm text-gray-500">Buat akun baru</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
             </div>
             <div>
               <Label htmlFor="password">Password</Label>

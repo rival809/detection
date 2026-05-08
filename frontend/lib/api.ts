@@ -5,6 +5,16 @@ const api = axios.create({
   withCredentials: true,
 });
 
+export function setToken(token: string) {
+  localStorage.setItem("access_token", token);
+  document.cookie = `access_token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+}
+
+export function clearToken() {
+  localStorage.removeItem("access_token");
+  document.cookie = "access_token=; path=/; max-age=0";
+}
+
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("access_token");
@@ -15,9 +25,9 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (r) => r,
-  async (error) => {
+  (error) => {
     if (error.response?.status === 401 && typeof window !== "undefined") {
-      localStorage.removeItem("access_token");
+      clearToken();
       window.location.href = "/login";
     }
     return Promise.reject(error);
