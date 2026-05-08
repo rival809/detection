@@ -24,7 +24,10 @@
       "PowerShell(gcloud compute *)",
       "PowerShell(gcloud compute ssh detection-server --zone=asia-southeast2-b --quiet --command=\"curl -fsSL https://get.docker.com | sudo sh && sudo usermod -aG docker $USER\")",
       "Bash(Get-ChildItem -Path . -Directory)",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "PowerShell(ssh -i \"$env:USERPROFILE\\\\.ssh\\\\gcp_key\" -o StrictHostKeyChecking=no rival_ramadhan97@34.101.133.152 \"grep 'ADMIN_SECRET' ~/detection/.env || echo 'NOT_FOUND'\")",
+      "Bash(ssh-keygen -l -f ~/.ssh/google_compute_engine.pub)",
+      "PowerShell(ssh -i \"$env:USERPROFILE\\\\.ssh\\\\google_compute_engine\" -o StrictHostKeyChecking=no rival_ramadhan97@34.101.133.152 \"echo connected\")"
     ]
   }
 }
