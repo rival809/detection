@@ -13,7 +13,7 @@ def get_alpr() -> ALPR:
     if _alpr is None:
         _alpr = ALPR(
             detector_model="yolo-v9-t-384-license-plate-end2end",
-            ocr_model="global-plates-mobile-vit-v2-model",
+            ocr_model="cct-xs-v2-global-model",
         )
     return _alpr
 

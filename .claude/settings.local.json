@@ -10,7 +10,15 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
-      "Bash(python -m ruff check app/ tests/ --select E,W,F,I --ignore E501 --fix)"
+      "Bash(python -m ruff check app/ tests/ --select E,W,F,I --ignore E501 --fix)",
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(pip show *)",
+      "Bash(pip install *)",
+      "Bash(gh api *)",
+      "WebFetch(domain:ankandrew.github.io)"
     ]
   }
 }
