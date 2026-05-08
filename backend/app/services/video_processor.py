@@ -9,7 +9,7 @@ from app.core.config import settings
 def is_sharp(frame: np.ndarray, threshold: float = None) -> bool:
     threshold = threshold or settings.BLUR_THRESHOLD
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    return cv2.Laplacian(gray, cv2.CV_64F).var() >= threshold
+    return bool(cv2.Laplacian(gray, cv2.CV_64F).var() >= threshold)
 
 
 def frame_sampler(video_path: str, interval_sec: float = None) -> Generator:

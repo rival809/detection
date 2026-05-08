@@ -50,10 +50,10 @@ def map_status(data: dict) -> str:
     )
     status_str = str(status_field).upper()
 
-    if "LUNAS" in status_str or "AKTIF" in status_str or "PAID" in status_str:
-        return "ACTIVE"
     if "BELUM" in status_str or "MATI" in status_str or "EXPIRED" in status_str:
         return "EXPIRED"
+    if "LUNAS" in status_str or "AKTIF" in status_str or "PAID" in status_str:
+        return "ACTIVE"
 
     # Fallback: check tgl_akhir_pajak (expiry date)
     tgl = item.get("tgl_akhir_pajak") or item.get("masa_berlaku") or ""
