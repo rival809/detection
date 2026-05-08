@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     MINIO_ACCESS_KEY: str
     MINIO_SECRET_KEY: str
     MINIO_BUCKET: str = "detection-storage"
+    MINIO_PUBLIC_URL: str = ""  # e.g. http://34.101.133.152:9000 — overrides internal hostname in presigned URLs
 
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15

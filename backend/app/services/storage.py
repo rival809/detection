@@ -42,11 +42,15 @@ class StorageService:
         self.client.fget_object(settings.MINIO_BUCKET, object_name, dest_path)
 
     def get_presigned_url(self, object_name: str, expires_hours: int = 1) -> str:
-        return self.client.presigned_get_object(
+        url = self.client.presigned_get_object(
             settings.MINIO_BUCKET,
             object_name,
             expires=timedelta(hours=expires_hours),
         )
+        if settings.MINIO_PUBLIC_URL:
+            # Replace internal Docker hostname with public-facing URL
+            url = url.replace(f"http://{settings.MINIO_ENDPOINT}", settings.MINIO_PUBLIC_URL)
+        return url
 
 
 storage_service = StorageService()
