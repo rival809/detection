@@ -9,8 +9,7 @@
 | Task Queue | Celery 5 + Redis 7 |
 | Object Storage | MinIO (self-hosted, S3-compatible) |
 | Database | PostgreSQL 16 + SQLAlchemy (ORM) |
-| AI - Detection | YOLOv8 (Ultralytics) |
-| AI - OCR | PaddleOCR |
+| AI - ALPR | fast-alpr (YOLOv9 detection + fast-plate-ocr) |
 | Auth | JWT (python-jose) + bcrypt |
 | Real-time | WebSocket (FastAPI native) |
 | Container | Docker + Docker Compose |
@@ -41,14 +40,12 @@ detection/
 │   │   ├── services/
 │   │   │   ├── storage.py
 │   │   │   ├── video_processor.py
-│   │   │   ├── yolo_detector.py
-│   │   │   ├── ocr_engine.py
+│   │   │   ├── alpr_engine.py        ← fast-alpr (detection + OCR sekaligus)
 │   │   │   ├── tax_api.py
 │   │   │   └── deduplicator.py
 │   │   └── tasks/
 │   │       └── process_video.py
-│   ├── models/
-│   │   └── yolov8_plate.pt
+│   ├── models/                        ← fast-alpr auto-download model ke sini
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/
@@ -167,18 +164,19 @@ services:
 - [ ] Implementasi `is_sharp(frame, threshold=100.0)` → Laplacian Variance
 - [ ] Download video dari MinIO sebelum proses, cleanup setelah selesai
 
-#### YOLO Detection (`yolo_detector.py`)
+#### ALPR Engine (`alpr_engine.py`) — fast-alpr
 
-- [ ] Load YOLOv8 model dari `models/yolov8_plate.pt`
-- [ ] Fungsi `detect_plates(frame)` → return list `{ bbox, confidence, cropped_image }`
-- [ ] Crop region plat dari frame berdasarkan bbox
-- [ ] Upload crop image ke MinIO → return URL
+fast-alpr menggabungkan deteksi plat (YOLOv9) dan pembacaan teks (fast-plate-ocr) dalam satu langkah.
 
-#### OCR Engine (`ocr_engine.py`)
+```
+frame → fast-alpr → [{ plate_number, confidence, crop }, ...]
+```
 
-- [ ] Inisialisasi PaddleOCR (`lang='en'`, `use_gpu=False`)
-- [ ] Fungsi `read_plate(image)` → return `{ text, confidence }`
-- [ ] Normalisasi teks (hapus spasi, uppercase, filter karakter invalid)
+- [x] Inisialisasi lazy `FastALPR` (download model otomatis saat pertama run)
+- [x] Fungsi `detect_and_read(frame)` → return list `{ plate_number, confidence, crop }`
+- [x] Normalisasi teks (uppercase, hapus karakter non-alphanumeric)
+- [x] Upload crop image ke MinIO → return URL
+- [ ] Hapus `yolo_detector.py` dan `ocr_engine.py` (digantikan sepenuhnya)
 
 #### Deduplication (`deduplicator.py`)
 
@@ -259,7 +257,7 @@ services:
 
 ```
 Minggu 1  →  Foundation: Docker Compose, Auth, Upload, Celery skeleton
-Minggu 2  →  AI Pipeline: Frame sampling, YOLO, OCR, Dedup, WebSocket progress
+Minggu 2  →  AI Pipeline: Frame sampling, fast-alpr (detection+OCR), Dedup, WebSocket progress
 Minggu 3  →  Integration: Tax API, Recheck endpoint, Dashboard halaman utama
 Minggu 4  →  Polish: Detail page, Export CSV, Security hardening, Testing
 ```

@@ -13,12 +13,11 @@ from app.core.celery_app import celery_app
 from app.core.config import settings
 from app.db.models import Detection, TaxStatus, Video, VideoStatus
 from app.db.session import SessionLocal
+from app.services.alpr_engine import detect_and_read
 from app.services.deduplicator import deduplicate
-from app.services.ocr_engine import read_plate
 from app.services.storage import storage_service
 from app.services.tax_api import TaxAPIService
 from app.services.video_processor import frame_sampler
-from app.services.yolo_detector import detect_plates
 
 
 def publish_progress(r: redis.Redis, video_id: str, stage: str, percent: int, message: str = ""):
@@ -57,23 +56,15 @@ def process_video(self, video_id: str):
             progress = 15 + int((frame_idx / max(total_frames, 1)) * 50)
             publish_progress(r, video_id, "processing", progress, f"Memproses frame {frame_idx}")
 
-            plates = detect_plates(frame)
-            for plate_det in plates:
-                crop = plate_det["crop"]
-                if crop.size == 0:
-                    continue
-                ocr_result = read_plate(crop)
-                if not ocr_result["text"] or len(ocr_result["text"]) < 4:
-                    continue
-
+            for det in detect_and_read(frame):
                 crop_filename = f"crops/{video_id}/{frame_idx}_{uuid.uuid4().hex[:8]}.jpg"
-                _, buf = cv2.imencode(".jpg", crop)
+                _, buf = cv2.imencode(".jpg", det["crop"])
                 asyncio.run(storage_service.upload_bytes(buf.tobytes(), crop_filename, "image/jpeg"))
                 crop_url = storage_service.get_presigned_url(crop_filename, expires_hours=24 * 7)
 
                 raw_detections.append({
-                    "plate_number": ocr_result["text"],
-                    "confidence": min(plate_det["confidence"], ocr_result["confidence"]),
+                    "plate_number": det["plate_number"],
+                    "confidence": det["confidence"],
                     "image_crop_url": crop_url,
                 })
 
