@@ -1,7 +1,16 @@
 from pathlib import Path
 
 import numpy as np
+import torch
 from ultralytics import YOLO
+
+# PyTorch 2.6+ changed weights_only default to True, which blocks ultralytics custom classes.
+# Allowlist the required globals so YOLO weights load correctly.
+try:
+    from ultralytics.nn.tasks import DetectionModel
+    torch.serialization.add_safe_globals([DetectionModel])
+except Exception:
+    pass
 
 MODEL_PATH = Path(__file__).parent.parent.parent / "models" / "yolov8_plate.pt"
 
