@@ -12,9 +12,6 @@ if [ ! -f .env ]; then
   exit 1
 fi
 
-echo "==> Running database migrations..."
-docker compose run --rm backend alembic upgrade head
-
 echo "==> Building & starting services..."
 docker compose up --build -d
 
