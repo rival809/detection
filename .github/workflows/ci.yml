@@ -63,7 +63,7 @@ jobs:
           pip install ruff pytest pytest-asyncio httpx
 
       - name: Lint (ruff)
-        run: ruff check app/ tests/ --select E,W,F,I --ignore E501
+        run: ruff check app/ tests/
 
       - name: Run tests
         run: pytest tests/ -v --tb=short
