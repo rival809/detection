@@ -8,17 +8,23 @@ from app.core.config import settings
 
 class StorageService:
     def __init__(self):
-        self.client = Minio(
-            settings.MINIO_ENDPOINT,
-            access_key=settings.MINIO_ACCESS_KEY,
-            secret_key=settings.MINIO_SECRET_KEY,
-            secure=False,
-        )
-        self._ensure_bucket()
+        self._client: Minio | None = None
+
+    @property
+    def client(self) -> Minio:
+        if self._client is None:
+            self._client = Minio(
+                settings.MINIO_ENDPOINT,
+                access_key=settings.MINIO_ACCESS_KEY,
+                secret_key=settings.MINIO_SECRET_KEY,
+                secure=False,
+            )
+            self._ensure_bucket()
+        return self._client
 
     def _ensure_bucket(self):
-        if not self.client.bucket_exists(settings.MINIO_BUCKET):
-            self.client.make_bucket(settings.MINIO_BUCKET)
+        if not self._client.bucket_exists(settings.MINIO_BUCKET):
+            self._client.make_bucket(settings.MINIO_BUCKET)
 
     async def upload_bytes(self, data: bytes, object_name: str, content_type: str = "application/octet-stream"):
         self.client.put_object(
