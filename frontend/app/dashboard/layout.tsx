@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { clearToken } from "@/lib/api";
 import api from "@/lib/api";
 import ThemeToggle from "@/components/theme-toggle";
+import { APP_VERSION } from "@/lib/version";
 
 const NAV = [
   {
@@ -148,6 +149,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="flex items-center justify-between px-3 py-2">
           <span className="text-xs text-muted-foreground">Tampilan</span>
           <ThemeToggle />
+        </div>
+        <div className="px-3 pb-1">
+          <span className="text-xs text-muted-foreground/50">v{APP_VERSION}</span>
         </div>
         <button
           onClick={handleLogout}

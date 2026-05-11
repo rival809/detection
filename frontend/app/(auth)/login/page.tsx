@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api, { setToken } from "@/lib/api";
+import { APP_VERSION } from "@/lib/version";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -103,6 +104,7 @@ export default function LoginPage() {
 
         </div>
       </div>
+      <p className="text-center text-xs text-muted-foreground mt-6">v{APP_VERSION}</p>
     </div>
   );
 }
