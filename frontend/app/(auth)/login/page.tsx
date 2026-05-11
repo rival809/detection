@@ -27,6 +27,7 @@ export default function LoginPage() {
   }
 
   return (
+    <>
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
@@ -106,5 +107,6 @@ export default function LoginPage() {
       </div>
     </div>
     <p className="fixed bottom-4 right-4 text-xs text-muted-foreground/50">v{APP_VERSION}</p>
+    </>
   );
 }
