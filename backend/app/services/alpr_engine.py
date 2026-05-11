@@ -9,7 +9,7 @@ _NORMALIZE_RE = re.compile(r"[^A-Z0-9]")
 
 # Format plat Indonesia: 1 huruf + 1-4 angka + 0-3 huruf
 # Contoh: B1234CD, D1469MF, A1B (tidak valid), 1234AB (tidak valid)
-_PLATE_FORMAT_RE = re.compile(r"^[A-Z]\d{1,4}[A-Z]{0,3}$")
+_PLATE_FORMAT_RE = re.compile(r"^[DZTEFB]\d{1,4}[A-Z]{0,3}$")
 
 MIN_CONFIDENCE = 0.70
 
