@@ -42,15 +42,27 @@ const NAV = [
       </svg>
     ),
   },
+  {
+    href: "/dashboard/users",
+    label: "Manajemen User",
+    superadminOnly: true,
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    ),
+  },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [pendingCount, setPendingCount] = useState(0);
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
 
   useEffect(() => {
     api.get("/review/queue/pending-count").then(({ data }) => setPendingCount(data.count)).catch(() => {});
+    api.get("/auth/me").then(({ data }) => setIsSuperadmin(data.is_superadmin)).catch(() => {});
   }, [pathname]);
 
   function handleLogout() {
@@ -80,6 +92,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1">
           {NAV.map((item) => {
+            if (item.superadminOnly && !isSuperadmin) return null;
             const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
             const isReview = item.href === "/dashboard/review";
             return (

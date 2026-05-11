@@ -28,10 +28,29 @@ class UserOut(BaseModel):
     id: UUID
     email: str
     is_active: bool
+    is_superadmin: bool
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    is_superadmin: bool = False
+
+
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+    is_active: Optional[bool] = None
+    is_superadmin: Optional[bool] = None
+
+
+class UserListOut(BaseModel):
+    items: List[UserOut]
+    total: int
 
 
 # Video

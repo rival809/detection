@@ -13,7 +13,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from sqlalchemy import text
 
-from app.api.routes import auth, detections, review, stats, videos, ws
+from app.api.routes import auth, detections, review, stats, users, videos, ws
 from app.core.config import settings
 from app.core.limiter import limiter
 from app.core.logging import setup_logging
@@ -28,11 +28,30 @@ def run_migrations():
     logger.info("Migrations complete.")
 
 
+def seed_superadmin():
+    from app.core.security import hash_password
+    from app.db.models import User
+    db = SessionLocal()
+    try:
+        if not db.query(User).filter(User.is_superadmin.is_(True)).first():
+            admin = User(
+                email=settings.SUPERADMIN_EMAIL,
+                hashed_password=hash_password(settings.SUPERADMIN_PASSWORD),
+                is_superadmin=True,
+            )
+            db.add(admin)
+            db.commit()
+            logger.info(f"Superadmin created: {settings.SUPERADMIN_EMAIL}")
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     setup_logging()
     Path("logs").mkdir(exist_ok=True)
     run_migrations()
+    seed_superadmin()
     yield
     logger.info("Shutting down.")
 
@@ -70,6 +89,7 @@ app.include_router(videos.router, prefix="/api/v1")
 app.include_router(detections.router, prefix="/api/v1")
 app.include_router(stats.router, prefix="/api/v1")
 app.include_router(review.router, prefix="/api/v1")
+app.include_router(users.router, prefix="/api/v1")
 app.include_router(ws.router)
 
 

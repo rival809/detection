@@ -2,27 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_user
 from app.core.config import settings
 from app.core.limiter import limiter
-from app.core.security import create_access_token, create_refresh_token, decode_token, hash_password, verify_password
+from app.core.security import create_access_token, create_refresh_token, decode_token, verify_password
 from app.db.models import User
-from app.db.schemas import TokenResponse, UserLogin, UserOut, UserRegister
+from app.db.schemas import TokenResponse, UserLogin, UserOut
 from app.db.session import get_db
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-
-@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-@limiter.limit("5/minute")
-def register(request: Request, payload: UserRegister, db: Session = Depends(get_db)):
-    if db.query(User).filter(User.email == payload.email).first():
-        raise HTTPException(status_code=400, detail="Email already registered")
-    user = User(email=payload.email, hashed_password=hash_password(payload.password))
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    logger.info(f"New user registered: {user.email}")
-    return user
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -37,6 +25,11 @@ def login(request: Request, payload: UserLogin, db: Session = Depends(get_db)):
         access_token=create_access_token(user.email),
         refresh_token=create_refresh_token(user.email),
     )
+
+
+@router.get("/me", response_model=UserOut)
+def me(current_user: User = Depends(get_current_user)):
+    return current_user
 
 
 @router.post("/refresh", response_model=TokenResponse)

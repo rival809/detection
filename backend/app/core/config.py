@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     TAX_API_BASE_URL: str = ""
     TAX_API_KEY: str = ""
 
+    # Default superadmin (di-seed otomatis saat startup jika belum ada user)
+    SUPERADMIN_EMAIL: str = "admin@detection.local"
+    SUPERADMIN_PASSWORD: str = "admin123"
+
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
 
     MAX_UPLOAD_SIZE_MB: int = 500
