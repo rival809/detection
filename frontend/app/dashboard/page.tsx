@@ -112,36 +112,37 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="p-6 space-y-6 max-w-6xl">
+    <div className="p-4 md:p-6 space-y-5 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Ringkasan deteksi plat nomor & status pajak</p>
         </div>
         <a
           href="/dashboard/upload"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+          className="shrink-0 inline-flex items-center gap-2 px-3 py-2 md:px-4 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>
           </svg>
-          Upload Video
+          <span className="hidden sm:inline">Upload Video</span>
+          <span className="sm:hidden">Upload</span>
         </a>
       </div>
 
       {/* Stat cards */}
       {stats ? (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {STAT_CARDS(stats).map((c) => (
-            <div key={c.label} className="bg-card border border-border rounded-xl p-5">
+            <div key={c.label} className="bg-card border border-border rounded-xl p-4 md:p-5">
               <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{c.label}</p>
-                  <p className={`text-3xl font-bold mt-2 ${c.color}`}>{c.value}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{c.sub}</p>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">{c.label}</p>
+                  <p className={`text-2xl md:text-3xl font-bold mt-2 ${c.color}`}>{c.value}</p>
+                  <p className="text-xs text-muted-foreground mt-1 hidden sm:block">{c.sub}</p>
                 </div>
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${c.bg} ${c.color}`}>
+                <div className={`w-9 h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center shrink-0 ${c.bg} ${c.color}`}>
                   {c.icon}
                 </div>
               </div>
@@ -149,15 +150,15 @@ export default function DashboardPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-card border border-border rounded-xl p-5 h-28 animate-pulse" />
+            <div key={i} className="bg-card border border-border rounded-xl p-4 md:p-5 h-24 md:h-28 animate-pulse" />
           ))}
         </div>
       )}
 
       {/* Chart */}
-      <div className="bg-card border border-border rounded-xl p-5">
+      <div className="bg-card border border-border rounded-xl p-4 md:p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="font-semibold text-foreground">Tren Deteksi Plat</p>
@@ -165,11 +166,11 @@ export default function DashboardPage() {
           </div>
         </div>
         {trend.length === 0 ? (
-          <div className="h-48 flex items-center justify-center">
+          <div className="h-40 md:h-48 flex items-center justify-center">
             <p className="text-sm text-muted-foreground">Belum ada data deteksi</p>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={200}>
             <BarChart data={trend} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="oklch(1 0 0 / 8%)" />
               <XAxis dataKey="date" tick={{ fontSize: 11, fill: "oklch(0.65 0.02 264)" }} tickFormatter={(d) => d.slice(5)} />
@@ -186,14 +187,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Review / Active Learning Stats */}
-      <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+      <div className="bg-card border border-border rounded-xl p-4 md:p-5 space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <p className="font-semibold text-foreground">Active Learning</p>
             <p className="text-xs text-muted-foreground mt-0.5">Performa review antrian & confusion map</p>
           </div>
-          <a href="/dashboard/review" className="text-xs font-medium text-primary hover:underline">
-            Buka Antrian →
+          <a href="/dashboard/review" className="text-xs font-medium text-primary hover:underline shrink-0">
+            Buka →
           </a>
         </div>
 
@@ -227,7 +228,7 @@ export default function DashboardPage() {
         )}
 
         {reviewStats && reviewStats.total_labeled > 0 && (
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-green-400" />
               {reviewStats.approved} benar
@@ -245,7 +246,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick links */}
-      <div className="flex gap-3">
+      <div className="flex gap-3 flex-wrap">
         <a href="/dashboard/videos" className="inline-flex items-center gap-2 px-4 py-2 border border-border text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/>
