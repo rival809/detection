@@ -15,7 +15,7 @@ def _make_sample(original: str, corrected: str | None):
 
 
 def _patch_db(samples):
-    return patch("app.services.confusion_map.SessionLocal", return_value=_mock_session(samples))
+    return patch("app.db.session.SessionLocal", return_value=_mock_session(samples))
 
 
 def _mock_session(samples):
