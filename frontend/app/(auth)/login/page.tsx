@@ -104,7 +104,7 @@ export default function LoginPage() {
 
         </div>
       </div>
-      <p className="text-center text-xs text-muted-foreground mt-6">v{APP_VERSION}</p>
     </div>
+    <p className="fixed bottom-4 right-4 text-xs text-muted-foreground/50">v{APP_VERSION}</p>
   );
 }
