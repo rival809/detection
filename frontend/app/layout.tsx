@@ -12,7 +12,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id" className={`${geistSans.variable} ${geistMono.variable} h-full dark`} suppressHydrationWarning>
+    <html lang="id" className={`${geistSans.variable} ${geistMono.variable} h-full`} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var t=localStorage.getItem('theme');if(t?t==='dark':true)document.documentElement.classList.add('dark')})()`,
+          }}
+        />
+      </head>
       <body className="h-full antialiased bg-background text-foreground">{children}</body>
     </html>
   );
