@@ -16,7 +16,7 @@ export default function LoginPage() {
     setError("");
     try {
       const { data } = await api.post("/auth/login", { email, password });
-      setToken(data.access_token);
+      setToken(data.access_token, data.refresh_token);
       router.push("/dashboard");
     } catch {
       setError("Email atau password salah");

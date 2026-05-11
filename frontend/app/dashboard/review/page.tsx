@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
+import Lightbox from "@/components/lightbox";
 
 type ReviewItem = {
   id: string;
@@ -18,7 +19,7 @@ function ConfidenceBadge({ value }: { value: number }) {
   return <span className={`font-semibold ${color}`}>{pct}%</span>;
 }
 
-function ReviewCard({ item, onDone }: { item: ReviewItem; onDone: (id: string) => void }) {
+function ReviewCard({ item, onDone, onZoom }: { item: ReviewItem; onDone: (id: string) => void; onZoom: (src: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [correctedPlate, setCorrectedPlate] = useState(item.raw_plate);
   const [loading, setLoading] = useState<"approve" | "correct" | "reject" | null>(null);
@@ -45,7 +46,18 @@ function ReviewCard({ item, onDone }: { item: ReviewItem; onDone: (id: string) =
       {/* Image */}
       <div className="bg-muted/30">
         {item.image_crop_url ? (
-          <img src={item.image_crop_url} alt={item.raw_plate} className="w-full h-32 object-cover" />
+          <button
+            onClick={() => onZoom(item.image_crop_url!)}
+            className="group relative w-full block"
+            title="Klik untuk perbesar"
+          >
+            <img src={item.image_crop_url} alt={item.raw_plate} className="w-full h-32 object-cover group-hover:opacity-80 transition-opacity" />
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m21 21-6-6m6 6v-4.8m0 4.8h-4.8"/><path d="M3 16.2V21m0 0h4.8M3 21l6-6"/><path d="M21 7.8V3m0 0h-4.8M21 3l-6 6"/><path d="M3 7.8V3m0 0h4.8M3 3l6 6"/>
+              </svg>
+            </div>
+          </button>
         ) : (
           <div className="w-full h-32 flex items-center justify-center text-muted-foreground text-xs">No image</div>
         )}
@@ -123,6 +135,7 @@ export default function ReviewQueuePage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
   const SIZE = 20;
 
@@ -153,6 +166,7 @@ export default function ReviewQueuePage() {
 
   return (
     <div className="p-4 md:p-6 space-y-5">
+      {lightbox && <Lightbox src={lightbox} alt="Crop kendaraan" onClose={() => setLightbox(null)} />}
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
@@ -194,7 +208,7 @@ export default function ReviewQueuePage() {
       {!loading && items.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {items.map((item) => (
-            <ReviewCard key={item.id} item={item} onDone={handleDone} />
+            <ReviewCard key={item.id} item={item} onDone={handleDone} onZoom={setLightbox} />
           ))}
         </div>
       )}
