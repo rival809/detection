@@ -13,9 +13,6 @@ Cara kerja:
 import time
 from collections import defaultdict
 
-from app.db.models import LabeledSample
-from app.db.session import SessionLocal
-
 # Substitusi dianggap valid jika muncul minimal N kali
 MIN_VOTES = 3
 # Dan char tujuan mendominasi minimal 80% dari semua koreksi untuk char asal itu
@@ -28,6 +25,9 @@ _cache_ts: float = 0.0
 
 
 def _compute_confusion_map() -> dict[str, str]:
+    from app.db.models import LabeledSample
+    from app.db.session import SessionLocal
+
     db = SessionLocal()
     try:
         samples = (
