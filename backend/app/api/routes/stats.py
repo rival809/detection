@@ -7,7 +7,7 @@ from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
-from app.db.models import Detection, LabeledSample, ReviewQueue, ReviewQueueStatus, TaxStatus, User, Video, VideoStatus
+from app.db.models import Detection, ReviewQueue, ReviewQueueStatus, TaxStatus, User, Video, VideoStatus
 from app.db.session import get_db
 from app.services.confusion_map import get_confusion_map
 

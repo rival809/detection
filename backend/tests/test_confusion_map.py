@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock, patch
 
 from app.services.confusion_map import (
-    MIN_RATIO,
     MIN_VOTES,
     _compute_confusion_map,
     apply_confusion_map,
