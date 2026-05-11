@@ -47,16 +47,16 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <label htmlFor="email" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Email
+                Username
               </label>
               <input
                 id="email"
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
-                placeholder="nama@email.com"
+                placeholder="Masukkan username"
                 className="w-full px-3.5 py-2.5 bg-background border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
               />
             </div>
@@ -101,10 +101,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-sm text-center text-muted-foreground mt-5">
-            Belum punya akun?{" "}
-            <a href="/register" className="text-primary font-semibold hover:underline">Daftar</a>
-          </p>
         </div>
       </div>
     </div>
