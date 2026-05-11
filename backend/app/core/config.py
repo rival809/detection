@@ -30,6 +30,13 @@ class Settings(BaseSettings):
     UPLOAD_RATE_LIMIT: str = "10/hour"
     LOGIN_RATE_LIMIT: str = "20/minute"
 
+    # Video constraints
+    MAX_VIDEO_DURATION_SEC: int = 600  # 10 menit
+
+    # Review queue notifications (opsional — kosongkan untuk nonaktif)
+    REVIEW_WEBHOOK_URL: str = ""
+    REVIEW_QUEUE_ALERT_THRESHOLD: int = 50
+
     LOG_LEVEL: str = "INFO"
 
     class Config:

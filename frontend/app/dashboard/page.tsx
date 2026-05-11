@@ -13,6 +13,16 @@ interface Stats {
   error_tax: number;
 }
 
+interface ReviewStats {
+  pending: number;
+  approved: number;
+  corrected: number;
+  rejected: number;
+  total_labeled: number;
+  accuracy_rate: number;
+  active_confusion_rules: number;
+}
+
 interface TrendItem { date: string; count: number }
 
 const STAT_CARDS = (s: Stats) => [
@@ -92,11 +102,13 @@ const STAT_CARDS = (s: Stats) => [
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null);
   const [trend, setTrend] = useState<TrendItem[]>([]);
 
   useEffect(() => {
     api.get("/stats/dashboard").then(({ data }) => setStats(data));
     api.get("/stats/trend?days=7").then(({ data }) => setTrend(data.trend));
+    api.get("/stats/review").then(({ data }) => setReviewStats(data));
   }, []);
 
   return (
@@ -173,6 +185,65 @@ export default function DashboardPage() {
         )}
       </div>
 
+      {/* Review / Active Learning Stats */}
+      <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-semibold text-foreground">Active Learning</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Performa review antrian & confusion map</p>
+          </div>
+          <a href="/dashboard/review" className="text-xs font-medium text-primary hover:underline">
+            Buka Antrian →
+          </a>
+        </div>
+
+        {reviewStats ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="rounded-lg bg-muted/50 p-3 text-center">
+              <p className="text-2xl font-bold text-yellow-400">{reviewStats.pending}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Menunggu Review</p>
+            </div>
+            <div className="rounded-lg bg-muted/50 p-3 text-center">
+              <p className="text-2xl font-bold text-foreground">{reviewStats.total_labeled}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Total Dilabel</p>
+            </div>
+            <div className="rounded-lg bg-muted/50 p-3 text-center">
+              <p className="text-2xl font-bold text-green-400">
+                {reviewStats.total_labeled > 0 ? `${Math.round(reviewStats.accuracy_rate * 100)}%` : "—"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">OCR Akurat</p>
+            </div>
+            <div className="rounded-lg bg-muted/50 p-3 text-center">
+              <p className="text-2xl font-bold text-violet-400">{reviewStats.active_confusion_rules}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Rule Aktif</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-lg bg-muted/50 p-3 h-16 animate-pulse" />
+            ))}
+          </div>
+        )}
+
+        {reviewStats && reviewStats.total_labeled > 0 && (
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-400" />
+              {reviewStats.approved} benar
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-yellow-400" />
+              {reviewStats.corrected} dikoreksi
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-red-400" />
+              {reviewStats.rejected} dibuang
+            </span>
+          </div>
+        )}
+      </div>
+
       {/* Quick links */}
       <div className="flex gap-3">
         <a href="/dashboard/videos" className="inline-flex items-center gap-2 px-4 py-2 border border-border text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
@@ -180,6 +251,12 @@ export default function DashboardPage() {
             <path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/>
           </svg>
           Lihat Semua Video
+        </a>
+        <a href="/dashboard/review" className="inline-flex items-center gap-2 px-4 py-2 border border-border text-sm font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/>
+          </svg>
+          Antrian Review
         </a>
       </div>
     </div>

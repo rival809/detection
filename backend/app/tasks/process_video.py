@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime
 
 import cv2
+import httpx
 import redis
 from loguru import logger
 
@@ -23,6 +24,17 @@ from app.services.video_processor import frame_sampler
 def publish_progress(r: redis.Redis, video_id: str, stage: str, percent: int, message: str = ""):
     payload = json.dumps({"stage": stage, "percent": percent, "message": message})
     r.publish(f"video_progress:{video_id}", payload)
+
+
+def _fire_webhook(pending_count: int) -> None:
+    url = settings.REVIEW_WEBHOOK_URL
+    if not url:
+        return
+    try:
+        httpx.post(url, json={"event": "review_queue_alert", "pending_count": pending_count}, timeout=5)
+        logger.info(f"Webhook fired: review queue has {pending_count} pending items")
+    except Exception as e:
+        logger.warning(f"Webhook failed: {e}")
 
 
 @celery_app.task(bind=True, max_retries=3)
@@ -49,6 +61,15 @@ def process_video(self, video_id: str):
         storage_service.download_file(video.storage_path, tmp_path)
         logger.info(f"[video:{video_id}] Downloaded to {tmp_path}")
         publish_progress(r, video_id, "downloaded", 15, "Video berhasil diunduh")
+
+        # Cek durasi video
+        cap = cv2.VideoCapture(tmp_path)
+        fps = cap.get(cv2.CAP_PROP_FPS) or 1
+        total_frames_check = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        cap.release()
+        duration_sec = total_frames_check / fps
+        if duration_sec > settings.MAX_VIDEO_DURATION_SEC:
+            raise ValueError(f"Durasi video {duration_sec:.0f}s melebihi batas {settings.MAX_VIDEO_DURATION_SEC}s")
 
         # Process frames
         raw_detections = []
@@ -91,6 +112,14 @@ def process_video(self, video_id: str):
                 image_crop_url=rev["image_crop_url"],
             ))
         db.flush()
+
+        # Webhook alert jika antrian melebihi threshold
+        if unique_reviews:
+            from app.db.models import ReviewQueueStatus as RQS
+            from sqlalchemy import func as sqlfunc
+            pending_total = db.query(sqlfunc.count(ReviewQueue.id)).filter(ReviewQueue.status == RQS.PENDING).scalar() or 0
+            if pending_total >= settings.REVIEW_QUEUE_ALERT_THRESHOLD:
+                _fire_webhook(pending_total)
 
         # Tax API
         tax_service = TaxAPIService()

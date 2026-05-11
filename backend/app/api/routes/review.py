@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.db.models import LabeledSample, ReviewQueue, ReviewQueueStatus, User
-from app.db.schemas import CorrectPlateIn, LabeledSampleOut, ReviewQueueListOut, ReviewQueueOut
+from app.db.schemas import CorrectPlateIn, LabeledSampleOut, ReviewQueueListOut
 from app.db.session import get_db
 from app.services.confusion_map import get_confusion_map, invalidate_cache
 
