@@ -22,18 +22,16 @@ from app.db.session import SessionLocal
 
 
 def run_migrations():
-    from sqlalchemy import create_engine, text
-    engine = create_engine(settings.DATABASE_URL)
-    with engine.connect() as conn:
-        conn.execute(text("SELECT pg_advisory_lock(202605110001)"))
+    import fcntl
+    with open("/tmp/alembic.lock", "w") as lock_file:
+        fcntl.flock(lock_file, fcntl.LOCK_EX)
         try:
             logger.info("Running database migrations...")
             alembic_cfg = Config("alembic.ini")
             command.upgrade(alembic_cfg, "head")
             logger.info("Migrations complete.")
         finally:
-            conn.execute(text("SELECT pg_advisory_unlock(202605110001)"))
-    engine.dispose()
+            fcntl.flock(lock_file, fcntl.LOCK_UN)
 
 
 def seed_superadmin():
