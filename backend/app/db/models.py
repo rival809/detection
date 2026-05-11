@@ -23,6 +23,13 @@ class TaxStatus(str, enum.Enum):
     ERROR = "ERROR"
 
 
+class ReviewQueueStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    CORRECTED = "CORRECTED"
+    REJECTED = "REJECTED"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -50,6 +57,7 @@ class Video(Base):
 
     user = relationship("User", back_populates="videos")
     detections = relationship("Detection", back_populates="video")
+    review_queue = relationship("ReviewQueue", back_populates="video")
 
 
 class Detection(Base):
@@ -65,3 +73,32 @@ class Detection(Base):
     detected_at = Column(DateTime, default=datetime.utcnow)
 
     video = relationship("Video", back_populates="detections")
+
+
+class ReviewQueue(Base):
+    __tablename__ = "review_queue"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    video_id = Column(UUID(as_uuid=True), ForeignKey("videos.id"), nullable=False)
+    raw_plate = Column(String, nullable=False)
+    confidence = Column(Float, nullable=False)
+    image_crop_url = Column(String, nullable=True)
+    status = Column(SAEnum(ReviewQueueStatus), default=ReviewQueueStatus.PENDING, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    video = relationship("Video")
+    labeled_sample = relationship("LabeledSample", back_populates="review_item", uselist=False)
+
+
+class LabeledSample(Base):
+    __tablename__ = "labeled_samples"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    review_queue_id = Column(UUID(as_uuid=True), ForeignKey("review_queue.id"), nullable=False)
+    original_plate = Column(String, nullable=False)
+    corrected_plate = Column(String, nullable=True)
+    reviewed_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    reviewed_at = Column(DateTime, default=datetime.utcnow)
+    image_crop_url = Column(String, nullable=True)
+
+    review_item = relationship("ReviewQueue", back_populates="labeled_sample")

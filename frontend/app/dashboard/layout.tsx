@@ -1,6 +1,8 @@
 "use client";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { clearToken } from "@/lib/api";
+import api from "@/lib/api";
 import ThemeToggle from "@/components/theme-toggle";
 
 const NAV = [
@@ -31,11 +33,25 @@ const NAV = [
       </svg>
     ),
   },
+  {
+    href: "/dashboard/review",
+    label: "Antrian Review",
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/>
+      </svg>
+    ),
+  },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    api.get("/review/queue/pending-count").then(({ data }) => setPendingCount(data.count)).catch(() => {});
+  }, [pathname]);
 
   function handleLogout() {
     clearToken();
@@ -65,6 +81,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 px-3 py-4 space-y-1">
           {NAV.map((item) => {
             const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            const isReview = item.href === "/dashboard/review";
             return (
               <a
                 key={item.href}
@@ -76,7 +93,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 }`}
               >
                 <span className={active ? "text-primary-foreground" : "text-muted-foreground"}>{item.icon}</span>
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {isReview && pendingCount > 0 && (
+                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${active ? "bg-white/20 text-white" : "bg-yellow-400/20 text-yellow-400"}`}>
+                    {pendingCount > 99 ? "99+" : pendingCount}
+                  </span>
+                )}
               </a>
             );
           })}

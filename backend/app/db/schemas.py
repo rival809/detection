@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
 
-from app.db.models import TaxStatus, VideoStatus
+from app.db.models import ReviewQueueStatus, TaxStatus, VideoStatus
 
 
 # Auth
@@ -72,3 +72,40 @@ class DetectionOut(BaseModel):
 class DetectionListOut(BaseModel):
     items: List[DetectionOut]
     total: int
+
+
+# Review Queue
+class ReviewQueueOut(BaseModel):
+    id: UUID
+    video_id: UUID
+    raw_plate: str
+    confidence: float
+    image_crop_url: Optional[str]
+    status: ReviewQueueStatus
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ReviewQueueListOut(BaseModel):
+    items: List[ReviewQueueOut]
+    total: int
+    page: int
+    size: int
+
+
+class CorrectPlateIn(BaseModel):
+    corrected_plate: str
+
+
+class LabeledSampleOut(BaseModel):
+    id: UUID
+    review_queue_id: UUID
+    original_plate: str
+    corrected_plate: Optional[str]
+    reviewed_at: datetime
+    image_crop_url: Optional[str]
+
+    class Config:
+        from_attributes = True

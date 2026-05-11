@@ -11,7 +11,7 @@ from loguru import logger
 
 from app.core.celery_app import celery_app
 from app.core.config import settings
-from app.db.models import Detection, TaxStatus, Video, VideoStatus
+from app.db.models import Detection, ReviewQueue, TaxStatus, Video, VideoStatus
 from app.db.session import SessionLocal
 from app.services.alpr_engine import detect_and_read
 from app.services.deduplicator import deduplicate
@@ -52,6 +52,7 @@ def process_video(self, video_id: str):
 
         # Process frames
         raw_detections = []
+        review_detections = []
         for frame_idx, frame, total_frames in frame_sampler(tmp_path):
             progress = 15 + int((frame_idx / max(total_frames, 1)) * 50)
             publish_progress(r, video_id, "processing", progress, f"Memproses frame {frame_idx}")
@@ -62,16 +63,34 @@ def process_video(self, video_id: str):
                 asyncio.run(storage_service.upload_bytes(buf.tobytes(), crop_filename, "image/jpeg"))
                 crop_url = storage_service.get_presigned_url(crop_filename, expires_hours=24 * 7)
 
-                raw_detections.append({
-                    "plate_number": det["plate_number"],
-                    "confidence": det["confidence"],
-                    "image_crop_url": crop_url,
-                })
+                if det["for_review"]:
+                    review_detections.append({
+                        "plate_number": det["plate_number"],
+                        "confidence": det["confidence"],
+                        "image_crop_url": crop_url,
+                    })
+                else:
+                    raw_detections.append({
+                        "plate_number": det["plate_number"],
+                        "confidence": det["confidence"],
+                        "image_crop_url": crop_url,
+                    })
 
-        logger.info(f"[video:{video_id}] Raw detections: {len(raw_detections)}")
+        logger.info(f"[video:{video_id}] Raw detections: {len(raw_detections)}, review candidates: {len(review_detections)}")
         publish_progress(r, video_id, "deduplicating", 70, "Deduplication plat nomor")
         unique_detections = deduplicate(raw_detections)
-        logger.info(f"[video:{video_id}] Unique plates: {len(unique_detections)}")
+        unique_reviews = deduplicate(review_detections)
+        logger.info(f"[video:{video_id}] Unique plates: {len(unique_detections)}, unique reviews: {len(unique_reviews)}")
+
+        # Save review candidates to ReviewQueue
+        for rev in unique_reviews:
+            db.add(ReviewQueue(
+                video_id=uuid.UUID(video_id),
+                raw_plate=rev["plate_number"],
+                confidence=rev["confidence"],
+                image_crop_url=rev["image_crop_url"],
+            ))
+        db.flush()
 
         # Tax API
         tax_service = TaxAPIService()

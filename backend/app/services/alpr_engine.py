@@ -3,6 +3,8 @@ import re
 import numpy as np
 from fast_alpr import ALPR
 
+from app.services.confusion_map import apply_confusion_map
+
 _alpr: ALPR | None = None
 
 _NORMALIZE_RE = re.compile(r"[^A-Z0-9]")
@@ -12,6 +14,7 @@ _NORMALIZE_RE = re.compile(r"[^A-Z0-9]")
 _PLATE_FORMAT_RE = re.compile(r"^[DZTEFB]\d{1,4}[A-Z]{0,3}$")
 
 MIN_CONFIDENCE = 0.70
+REVIEW_MIN_CONFIDENCE = 0.40
 
 
 def get_alpr() -> ALPR:
@@ -35,8 +38,10 @@ def is_valid_plate(text: str) -> bool:
 def detect_and_read(frame: np.ndarray) -> list[dict]:
     """
     Run plate detection + OCR on a single frame.
-    Returns list of { plate_number, confidence, crop }.
-    Only returns plates with valid Indonesian format and confidence >= 70%.
+    Returns list of { plate_number, confidence, crop, for_review }.
+    - for_review=False: confidence >= MIN_CONFIDENCE (0.70) → masuk Detection
+    - for_review=True:  confidence >= REVIEW_MIN_CONFIDENCE (0.40) → masuk ReviewQueue
+    - Di bawah REVIEW_MIN_CONFIDENCE dibuang.
     """
     alpr = get_alpr()
     results = alpr.predict(frame)
@@ -47,7 +52,7 @@ def detect_and_read(frame: np.ndarray) -> list[dict]:
         if not ocr or not ocr.text:
             continue
 
-        text = normalize_plate(ocr.text)
+        text = apply_confusion_map(normalize_plate(ocr.text))
 
         if not is_valid_plate(text):
             continue
@@ -73,13 +78,14 @@ def detect_and_read(frame: np.ndarray) -> list[dict]:
         ocr_conf = float(sum(raw_ocr_conf) / len(raw_ocr_conf)) if isinstance(raw_ocr_conf, list) else float(raw_ocr_conf)
         confidence = (det_conf * ocr_conf) ** 0.5
 
-        if confidence < MIN_CONFIDENCE:
+        if confidence < REVIEW_MIN_CONFIDENCE:
             continue
 
         detections.append({
             "plate_number": text,
             "confidence": confidence,
             "crop": crop,
+            "for_review": confidence < MIN_CONFIDENCE,
         })
 
     return detections

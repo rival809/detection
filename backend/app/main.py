@@ -13,7 +13,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from sqlalchemy import text
 
-from app.api.routes import auth, detections, stats, videos, ws
+from app.api.routes import auth, detections, review, stats, videos, ws
 from app.core.config import settings
 from app.core.limiter import limiter
 from app.core.logging import setup_logging
@@ -69,6 +69,7 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(videos.router, prefix="/api/v1")
 app.include_router(detections.router, prefix="/api/v1")
 app.include_router(stats.router, prefix="/api/v1")
+app.include_router(review.router, prefix="/api/v1")
 app.include_router(ws.router)
 
 
