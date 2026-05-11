@@ -65,8 +65,8 @@ class TestComputeConfusionMap:
         assert result == {}
 
     def test_more_than_two_diffs_skipped(self):
-        # 3 karakter berbeda → terlalu noisy, skip
-        samples = [_make_sample("B123OI", "B1230LD"[:-1])] * MIN_VOTES
+        # "B123OI" vs "B023XD": 3 karakter berbeda (1→0, O→X, I→D) → terlalu noisy, skip
+        samples = [_make_sample("B123OI", "B023XD")] * MIN_VOTES
         with _patch_db(samples):
             result = _compute_confusion_map()
         assert result == {}
