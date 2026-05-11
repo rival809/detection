@@ -91,10 +91,16 @@ def delete_video(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    from app.db.models import Detection
+    from app.db.models import Detection, LabeledSample, ReviewQueue
     video = db.query(Video).filter(Video.id == video_id, Video.user_id == current_user.id).first()
     if not video:
         raise HTTPException(status_code=404, detail="Video not found")
-    db.query(Detection).filter(Detection.video_id == video_id).delete()
+
+    # Hapus child records sesuai urutan FK: LabeledSample → ReviewQueue → Detection → Video
+    rq_ids = [rq.id for rq in db.query(ReviewQueue.id).filter(ReviewQueue.video_id == video_id)]
+    if rq_ids:
+        db.query(LabeledSample).filter(LabeledSample.review_queue_id.in_(rq_ids)).delete(synchronize_session=False)
+        db.query(ReviewQueue).filter(ReviewQueue.video_id == video_id).delete(synchronize_session=False)
+    db.query(Detection).filter(Detection.video_id == video_id).delete(synchronize_session=False)
     db.delete(video)
     db.commit()
