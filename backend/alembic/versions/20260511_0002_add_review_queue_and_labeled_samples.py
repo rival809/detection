@@ -16,6 +16,8 @@ branch_labels = None
 depends_on = None
 
 review_queue_status = sa.Enum("PENDING", "APPROVED", "CORRECTED", "REJECTED", name="reviewqueuestatus")
+# create_type=False karena enum dibuat manual via review_queue_status.create()
+review_queue_status_col = sa.Enum("PENDING", "APPROVED", "CORRECTED", "REJECTED", name="reviewqueuestatus", create_type=False)
 
 
 def upgrade() -> None:
@@ -28,7 +30,7 @@ def upgrade() -> None:
         sa.Column("raw_plate", sa.String(), nullable=False),
         sa.Column("confidence", sa.Float(), nullable=False),
         sa.Column("image_crop_url", sa.String(), nullable=True),
-        sa.Column("status", review_queue_status, nullable=False, server_default="PENDING"),
+        sa.Column("status", review_queue_status_col, nullable=False, server_default="PENDING"),
         sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
     )
     op.create_index("ix_review_queue_status", "review_queue", ["status"])
