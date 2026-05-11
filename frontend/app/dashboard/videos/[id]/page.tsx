@@ -30,6 +30,8 @@ export default function VideoDetailPage() {
   const [recheckingId, setRecheckingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [correctingId, setCorrectingId] = useState<string | null>(null);
+  const [correctValue, setCorrectValue] = useState<Record<string, string>>({});
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -60,6 +62,19 @@ export default function VideoDetailPage() {
     try {
       const { data } = await api.post(`/videos/${id}/detections/${detectionId}/recheck`);
       setDetections((prev) => prev.map((d) => (d.id === detectionId ? data : d)));
+    } finally {
+      setRecheckingId(null);
+    }
+  }
+
+  async function correctDetection(detectionId: string) {
+    const plate = correctValue[detectionId]?.trim().toUpperCase();
+    if (!plate) return;
+    setRecheckingId(detectionId);
+    try {
+      await api.post(`/videos/${id}/detections/${detectionId}/correct`, { corrected_plate: plate });
+      setDetections((prev) => prev.map((d) => d.id === detectionId ? { ...d, plate_number: plate } : d));
+      setCorrectingId(null);
     } finally {
       setRecheckingId(null);
     }
@@ -230,46 +245,82 @@ export default function VideoDetailPage() {
                       </td>
 
                       <td className="px-4 md:px-5 py-3">
-                        <div className="flex items-center gap-1.5 justify-end">
-                          <button
-                            onClick={() => recheck(d.id)}
-                            disabled={recheckingId === d.id}
-                            className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-50 transition-colors"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={recheckingId === d.id ? "animate-spin" : ""}>
-                              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
-                            </svg>
-                            <span className="hidden sm:inline">{recheckingId === d.id ? "Mengecek..." : "Re-check"}</span>
-                          </button>
-
-                          {confirmDeleteId === d.id ? (
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => deleteDetection(d.id)}
-                                disabled={deletingId === d.id}
-                                className="px-2 py-1.5 text-xs font-semibold rounded-lg bg-destructive text-white hover:bg-destructive/80 transition-colors disabled:opacity-50"
-                              >
-                                {deletingId === d.id ? "..." : "Hapus"}
-                              </button>
-                              <button
-                                onClick={() => setConfirmDeleteId(null)}
-                                className="px-2 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:bg-accent transition-colors"
-                              >
-                                Batal
-                              </button>
-                            </div>
-                          ) : (
+                        {correctingId === d.id ? (
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              autoFocus
+                              type="text"
+                              value={correctValue[d.id] ?? d.plate_number}
+                              onChange={(e) => setCorrectValue((p) => ({ ...p, [d.id]: e.target.value.toUpperCase() }))}
+                              onKeyDown={(e) => { if (e.key === "Enter") correctDetection(d.id); if (e.key === "Escape") setCorrectingId(null); }}
+                              className="w-28 px-2 py-1 font-mono text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
                             <button
-                              onClick={() => setConfirmDeleteId(d.id)}
-                              className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                              title="Hapus deteksi"
+                              onClick={() => correctDetection(d.id)}
+                              disabled={recheckingId === d.id}
+                              className="px-2 py-1.5 text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                              </svg>
+                              {recheckingId === d.id ? "..." : "Simpan"}
                             </button>
-                          )}
-                        </div>
+                            <button
+                              onClick={() => setCorrectingId(null)}
+                              className="px-2 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:bg-accent transition-colors"
+                            >
+                              Batal
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 justify-end">
+                            <button
+                              onClick={() => { setCorrectingId(d.id); setCorrectValue((p) => ({ ...p, [d.id]: d.plate_number })); }}
+                              className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium rounded-lg border border-border text-yellow-400 hover:bg-yellow-500/10 transition-colors"
+                              title="Koreksi plat"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                              </svg>
+                              <span className="hidden sm:inline">Koreksi</span>
+                            </button>
+                            <button
+                              onClick={() => recheck(d.id)}
+                              disabled={recheckingId === d.id}
+                              className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-50 transition-colors"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={recheckingId === d.id ? "animate-spin" : ""}>
+                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
+                              </svg>
+                              <span className="hidden sm:inline">{recheckingId === d.id ? "..." : "Re-check"}</span>
+                            </button>
+
+                            {confirmDeleteId === d.id ? (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => deleteDetection(d.id)}
+                                  disabled={deletingId === d.id}
+                                  className="px-2 py-1.5 text-xs font-semibold rounded-lg bg-destructive text-white hover:bg-destructive/80 transition-colors disabled:opacity-50"
+                                >
+                                  {deletingId === d.id ? "..." : "Hapus"}
+                                </button>
+                                <button
+                                  onClick={() => setConfirmDeleteId(null)}
+                                  className="px-2 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:bg-accent transition-colors"
+                                >
+                                  Batal
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setConfirmDeleteId(d.id)}
+                                className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                title="Hapus deteksi"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );
