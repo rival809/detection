@@ -36,26 +36,28 @@ class TestJWT:
 
 
 class TestAuthEndpoints:
-    def test_register_success(self, client):
+    def test_register_endpoint_removed(self, client):
         resp = client.post("/api/v1/auth/register", json={"email": "new@example.com", "password": "pass123"})
-        assert resp.status_code == 201
-        assert resp.json()["email"] == "new@example.com"
+        assert resp.status_code == 404
 
-    def test_register_duplicate_email(self, client):
-        client.post("/api/v1/auth/register", json={"email": "dup@example.com", "password": "pass123"})
-        resp = client.post("/api/v1/auth/register", json={"email": "dup@example.com", "password": "pass123"})
-        assert resp.status_code == 400
-
-    def test_login_success(self, client):
-        client.post("/api/v1/auth/register", json={"email": "login@example.com", "password": "pass123"})
+    def test_login_success(self, client, db):
+        from app.core.security import hash_password
+        from app.db.models import User
+        user = User(email="login@example.com", hashed_password=hash_password("pass123"))
+        db.add(user)
+        db.commit()
         resp = client.post("/api/v1/auth/login", json={"email": "login@example.com", "password": "pass123"})
         assert resp.status_code == 200
         data = resp.json()
         assert "access_token" in data
         assert "refresh_token" in data
 
-    def test_login_wrong_password(self, client):
-        client.post("/api/v1/auth/register", json={"email": "pw@example.com", "password": "correctpass"})
+    def test_login_wrong_password(self, client, db):
+        from app.core.security import hash_password
+        from app.db.models import User
+        user = User(email="pw@example.com", hashed_password=hash_password("correctpass"))
+        db.add(user)
+        db.commit()
         resp = client.post("/api/v1/auth/login", json={"email": "pw@example.com", "password": "wrongpass"})
         assert resp.status_code == 401
 
