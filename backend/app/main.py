@@ -2,8 +2,6 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import redis as redis_lib
-from alembic import command
-from alembic.config import Config
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -20,18 +18,6 @@ from app.core.logging import setup_logging
 from app.core.middleware import RequestIDMiddleware
 from app.db.session import SessionLocal
 
-
-def run_migrations():
-    import fcntl
-    with open("/tmp/alembic.lock", "w") as lock_file:
-        fcntl.flock(lock_file, fcntl.LOCK_EX)
-        try:
-            logger.info("Running database migrations...")
-            alembic_cfg = Config("alembic.ini")
-            command.upgrade(alembic_cfg, "head")
-            logger.info("Migrations complete.")
-        finally:
-            fcntl.flock(lock_file, fcntl.LOCK_UN)
 
 
 def seed_superadmin():
@@ -56,7 +42,6 @@ def seed_superadmin():
 async def lifespan(app: FastAPI):
     setup_logging()
     Path("logs").mkdir(exist_ok=True)
-    run_migrations()
     seed_superadmin()
     yield
     logger.info("Shutting down.")
