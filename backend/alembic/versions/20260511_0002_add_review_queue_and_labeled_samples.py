@@ -8,6 +8,7 @@ import uuid
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects.postgresql import ENUM as PG_ENUM
 from sqlalchemy.dialects.postgresql import UUID
 
 revision = "0002"
@@ -15,13 +16,19 @@ down_revision = "0001"
 branch_labels = None
 depends_on = None
 
-review_queue_status = sa.Enum("PENDING", "APPROVED", "CORRECTED", "REJECTED", name="reviewqueuestatus")
-# create_type=False karena enum dibuat manual via review_queue_status.create()
-review_queue_status_col = sa.Enum("PENDING", "APPROVED", "CORRECTED", "REJECTED", name="reviewqueuestatus", create_type=False)
-
 
 def upgrade() -> None:
-    review_queue_status.create(op.get_bind(), checkfirst=True)
+    # Create enum type idempotently via raw SQL
+    op.execute("""
+        DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'reviewqueuestatus') THEN
+                CREATE TYPE reviewqueuestatus AS ENUM ('PENDING', 'APPROVED', 'CORRECTED', 'REJECTED');
+            END IF;
+        END $$
+    """)
+
+    # create_type=False: enum already created above, don't let SQLAlchemy try again
+    status_col = PG_ENUM(name="reviewqueuestatus", create_type=False)
 
     op.create_table(
         "review_queue",
@@ -30,7 +37,7 @@ def upgrade() -> None:
         sa.Column("raw_plate", sa.String(), nullable=False),
         sa.Column("confidence", sa.Float(), nullable=False),
         sa.Column("image_crop_url", sa.String(), nullable=True),
-        sa.Column("status", review_queue_status_col, nullable=False, server_default="PENDING"),
+        sa.Column("status", status_col, nullable=False, server_default="PENDING"),
         sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
     )
     op.create_index("ix_review_queue_status", "review_queue", ["status"])
@@ -50,4 +57,4 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_table("labeled_samples")
     op.drop_table("review_queue")
-    review_queue_status.drop(op.get_bind(), checkfirst=True)
+    op.execute("DROP TYPE IF EXISTS reviewqueuestatus")
