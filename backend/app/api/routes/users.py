@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_superadmin, get_current_user
+from app.api.deps import get_current_superadmin
 from app.core.security import hash_password
 from app.db.models import User
 from app.db.schemas import UserCreate, UserListOut, UserOut, UserUpdate
